@@ -152,18 +152,6 @@ async function collabRole(repo, collabsArray) {
                   name
                   email
                   organizationVerifiedDomainEmails(login: $owner)
-                  createdAt
-                  updatedAt
-                  contributionsCollection(organizationID: $id, from: $from, to: $to) {
-                    hasAnyContributions
-                    totalCommitContributions
-                    totalIssueContributions
-                    totalPullRequestContributions
-                    totalPullRequestReviewContributions
-                    totalRepositoriesWithContributedIssues
-                    totalRepositoriesWithContributedCommits
-                    totalRepositoriesWithContributedPullRequests
-                    totalRepositoriesWithContributedPullRequestReviews
                   }
                 }
                 permission
@@ -206,29 +194,15 @@ async function collabRole(repo, collabsArray) {
 
         const login = role.node.login
         const name = role.node.name || ''
-        const publicEmail = role.node.email || ''
         const verifiedEmail = role.node.organizationVerifiedDomainEmails ? role.node.organizationVerifiedDomainEmails.join(', ') : ''
-        const createdAt = role.node.createdAt.slice(0, 10) || ''
-        const updatedAt = role.node.updatedAt.slice(0, 10) || ''
         const permission = role.permission
         const orgRepo = repo.name
         const visibility = repo.visibility
-
-        const activeContrib = role.node.contributionsCollection.hasAnyContributions
-        const commitContrib = role.node.contributionsCollection.totalCommitContributions
-        const issueContrib = role.node.contributionsCollection.totalIssueContributions
-        const prContrib = role.node.contributionsCollection.totalPullRequestContributions
-        const prreviewContrib = role.node.contributionsCollection.totalPullRequestReviewContributions
-        const repoIssueContrib        const repoCommitContrib = role.node.contributionsCollection.totalRepositoriesWithContributedCommits
-        const repoPullRequestContrib = role.node.contributionsCollection.totalRepositoriesWithContributedPullRequests
-        const repoPullRequestReviewContrib = role.node.contributionsCollection.totalRepositoriesWithContributedPullRequestReviews
-
-        const sumContrib = commitContrib + issueContrib + prContrib + prreviewContrib + repoIssueContrib + repoCommitContrib + repoPullRequestContrib + repoPullRequestReviewContrib || ''
-
+        
         if (role.permission === rolePermission) {
-          collabsArray.push({ orgRepo, login, name, publicEmail, verifiedEmail, permission, visibility, org, createdAt, updatedAt, activeContrib, sumContrib })
+          collabsArray.push({ orgRepo, login, name, verifiedEmail, permission, visibility, org })
         } else if (rolePermission === 'ALL') {
-          collabsArray.push({ orgRepo, login, name, publicEmail, verifiedEmail, permission, visibility, org, createdAt, updatedAt, activeContrib, sumContrib })
+          collabsArray.push({ orgRepo, login, name, verifiedEmail, permission, visibility, org })
         }
       }
     } while (hasNextPage);
@@ -390,16 +364,11 @@ async function mergeArrays(collabsArray, emailArray, mergeArray, memberArray) {
     collabsArray.forEach((collab) => {
       const login = collab      const login = collab.login
       const name = collab.name
-      const publicEmail = collab.publicEmail
       const verifiedEmail = collab.verifiedEmail
       const permission = collab.permission
       const visibility = collab.visibility
       const org = collab.org
       const orgRepo = collab.orgRepo
-      const createdAt = collab.createdAt
-      const updatedAt = collab.updatedAt
-      const activeContrib = collab.activeContrib
-      const sumContrib = collab.sumContrib
 
       const ssoEmail = emailArray.find((email) => email.login === login)
       const ssoEmailValue = ssoEmail ? ssoEmail.ssoEmail : ''
@@ -407,7 +376,7 @@ async function mergeArrays(collabsArray, emailArray, mergeArray, memberArray) {
       const member = memberArray.find((member) => member.login === login)
       const memberValue = member ? member.role : 'OUTSIDE COLLABORATOR'
 
-      const ssoCollab = { orgRepo, visibility, login, name, ssoEmailValue, publicEmail, verifiedEmail, permission, org, createdAt, updatedAt, activeContrib, sumContrib, memberValue }
+      const ssoCollab = { orgRepo, visibility, login, name, ssoEmailValue, verifiedEmail, permission, org, memberValue }
 
       mergeArray.push(ssoCollab)
     })
@@ -426,13 +395,8 @@ async function report(mergeArray) {
       name: 'Full name',
       ssoEmailValue: 'SSO email',
       verifiedEmail: 'Verified email',
-      publicEmail: 'Public email',
       permission: 'Repo permission',
       memberValue: 'Organization role',
-      activeContrib: 'Active contributions',
-      sumContrib: 'Total contributions',
-      createdAt: 'User created',
-      updatedAt: 'User updated',
       org: 'Organization'
     }
 
