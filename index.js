@@ -86,7 +86,9 @@ async function orgID() {
 // Query all organization repository names
 async function repoNames(collabsArray) {
   try {
-    let endCursor = null
+    // Add a cursor variable to keep track of pagination
+    let endCursor = null;
+
     const query = /* GraphQL */ `
       query ($owner: String!, $cursorID: String) {
         organization(login: $owner) {
@@ -102,41 +104,43 @@ async function repoNames(collabsArray) {
           }
         }
       }
-    `
+    `;
 
-    let hasNextPage = false
-    let dataJSON = null
+    let hasNextPage = false;
+    let dataJSON = null;
 
     do {
       dataJSON = await octokit.graphql({
         query,
         owner: org,
         cursorID: endCursor
-      })
+      });
 
-      const repos = dataJSON.organization.repositories.nodes.map((repo) => repo)
+      const repos = dataJSON.organization.repositories.nodes.map((repo) => repo);
 
-      hasNextPage = dataJSON.organization.repositories.pageInfo.hasNextPage
+      hasNextPage = dataJSON.organization.repositories.pageInfo.hasNextPage;
 
       for (const repo of repos) {
         if (hasNextPage) {
-          endCursor = dataJSON.organization.repositories.pageInfo.endCursor
+          endCursor = dataJSON.organization.repositories.pageInfo.endCursor;
         } else {
-          endCursor = null
+          endCursor = null;
         }
         await collabRole(repo, collabsArray)
         console.log(repo.name)
       }
-    } while (hasNextPage)
+    } while (hasNextPage);
   } catch (error) {
-    core.setFailed(error.message)
+    core.setFailed(error.message);
   }
 }
 
 // Query all repository collaborators
 async function collabRole(repo, collabsArray) {
   try {
-    let endCursor = null
+    // Add a cursor variable to keep track of pagination
+    let endCursor = null;
+
     const query = /* GraphQL */ `
       query ($owner: String!, $id: ID!, $orgRepo: String!, $affil: CollaboratorAffiliation, $cursorID: String, $from: DateTime, $to: DateTime) {
         organization(login: $owner) {
@@ -149,7 +153,6 @@ async function collabRole(repo, collabsArray) {
                   email
                   organizationVerifiedDomainEmails(login: $owner)
                   createdAt
-                  updatedAt
                   updatedAt
                   contributionsCollection(organizationID: $id, from: $from, to: $to) {
                     hasAnyContributions
@@ -173,10 +176,10 @@ async function collabRole(repo, collabsArray) {
           }
         }
       }
-    `
+    `;
 
-    let hasNextPage = false
-    let dataJSON = null
+    let hasNextPage = false;
+    let dataJSON = null;
 
     do {
       dataJSON = await octokit.graphql({
@@ -188,17 +191,17 @@ async function collabRole(repo, collabsArray) {
         from: from,
         to: to,
         cursorID: endCursor
-      })
+      });
 
-      const roles = dataJSON.organization.repository.collaborators.edges.map((role) => role)
+      const roles = dataJSON.organization.repository.collaborators.edges.map((role) => role);
 
-      hasNextPage = dataJSON.organization.repository.collaborators.pageInfo.hasNextPage
+      hasNextPage = dataJSON.organization.repository.collaborators.pageInfo.hasNextPage;
 
       for (const role of roles) {
         if (hasNextPage) {
-          endCursor = dataJSON.organization.repository.collaborators.pageInfo.endCursor
+          endCursor = dataJSON.organization.repository.collaborators.pageInfo.endCursor;
         } else {
-          endCursor = null
+          endCursor = null;
         }
 
         const login = role.node.login
@@ -216,8 +219,7 @@ async function collabRole(repo, collabsArray) {
         const issueContrib = role.node.contributionsCollection.totalIssueContributions
         const prContrib = role.node.contributionsCollection.totalPullRequestContributions
         const prreviewContrib = role.node.contributionsCollection.totalPullRequestReviewContributions
-        const repoIssueContrib = role.node.contributionsCollection.totalRepositoriesWithContributedIssues
-        const repoCommitContrib = role.node.contributionsCollection.totalRepositoriesWithContributedCommits
+        const repoIssueContrib        const repoCommitContrib = role.node.contributionsCollection.totalRepositoriesWithContributedCommits
         const repoPullRequestContrib = role.node.contributionsCollection.totalRepositoriesWithContributedPullRequests
         const repoPullRequestReviewContrib = role.node.contributionsCollection.totalRepositoriesWithContributedPullRequestReviews
 
@@ -229,8 +231,10 @@ async function collabRole(repo, collabsArray) {
           collabsArray.push({ orgRepo, login, name, publicEmail, verifiedEmail, permission, visibility, org, createdAt, updatedAt, activeContrib, sumContrib })
         }
       }
-    } while (hasNextPage)
-  } catch (error) {}
+    } while (hasNextPage);
+  } catch (error) {
+    core.setFailed(error.message);
+  }
 }
 
 // Check if the organization has SSO enabled
@@ -264,7 +268,8 @@ async function ssoCheck(emailArray) {
 // Retrieve all members of a SSO enabled organization
 async function ssoEmail(emailArray) {
   try {
-    let paginationMember = null
+    // Add a cursor variable to keep track of pagination
+    let paginationMember = null;
 
     const query = /* GraphQL */ `
       query ($org: String!, $cursorID: String) {
@@ -328,7 +333,9 @@ async function ssoEmail(emailArray) {
 // Query all organization members
 async function membersWithRole(memberArray) {
   try {
-    let endCursor = null
+    // Add a cursor variable to keep track of pagination
+    let endCursor = null;
+
     const query = /* GraphQL */ `
       query ($owner: String!, $cursorID: String) {
         organization(login: $owner) {
@@ -381,7 +388,7 @@ async function membersWithRole(memberArray) {
 async function mergeArrays(collabsArray, emailArray, mergeArray, memberArray) {
   try {
     collabsArray.forEach((collab) => {
-      const login = collab.login
+      const login = collab      const login = collab.login
       const name = collab.name
       const publicEmail = collab.publicEmail
       const verifiedEmail = collab.verifiedEmail
@@ -400,7 +407,7 @@ async function mergeArrays(collabsArray, emailArray, mergeArray, memberArray) {
       const member = memberArray.find((member) => member.login === login)
       const memberValue = member ? member.role : 'OUTSIDE COLLABORATOR'
 
-      ssoCollab = { orgRepo, visibility, login, name, ssoEmailValue, publicEmail, verifiedEmail, permission, org, createdAt, updatedAt, activeContrib, sumContrib, memberValue }
+      const ssoCollab = { orgRepo, visibility, login, name, ssoEmailValue, publicEmail, verifiedEmail, permission, org, createdAt, updatedAt, activeContrib, sumContrib, memberValue }
 
       mergeArray.push(ssoCollab)
     })
@@ -507,3 +514,4 @@ async function json(mergeArray) {
     core.setFailed(error.message)
   }
 }
+
