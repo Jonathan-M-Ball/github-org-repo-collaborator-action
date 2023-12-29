@@ -92,7 +92,7 @@ async function repoNames(collabsArray) {
     const query = /* GraphQL */ `
       query ($owner: String!, $cursorID: String) {
         organization(login: $owner) {
-          repositories(first: 100, after: $cursorID) {
+          repositories(first: 100, after: $cursorID, privacy: PRIVATE) {
             nodes {
               name
               visibility
