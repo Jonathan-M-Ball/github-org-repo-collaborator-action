@@ -116,7 +116,8 @@ async function repoNames(collabsArray) {
         cursorID: endCursor
       });
 
-      const repos = dataJSON.organization.repositories.nodes.map((repo) => repo);
+      const repos = dataJSON.organization.repositories.nodes.filter((repo) => repo.visibility ===
+        'PRIVATE');
 
       hasNextPage = dataJSON.organization.repositories.pageInfo.hasNextPage;
 
